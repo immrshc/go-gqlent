@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 
 	"entgo.io/ent/dialect"
@@ -10,6 +11,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/immrshc/go-gqlent/ent"
+	"github.com/immrshc/go-gqlent/ent/user"
 )
 
 // Open new connection
@@ -32,9 +34,37 @@ func main() {
 	if err := client.Schema.Create(ctx); err != nil {
 		log.Fatal(err)
 	}
-	users, err := client.User.Query().All(ctx)
+	//users, err := client.User.Query().All(ctx)
+	u, err := QueryUser(ctx, client)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(users)
+	log.Println(u)
+}
+
+func CreateUser(ctx context.Context, client *ent.Client) (*ent.User, error) {
+	u, err := client.User.
+		Create().
+		SetAge(30).
+		SetName("a8m").
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed creating user: %w", err)
+	}
+	log.Println("user was created: ", u)
+	return u, nil
+}
+
+func QueryUser(ctx context.Context, client *ent.Client) (*ent.User, error) {
+	u, err := client.User.
+		Query().
+		Where(user.Name("a8m")).
+		// `Only` fails if no user found,
+		// or more than 1 user returned.
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed querying user: %w", err)
+	}
+	log.Println("user returned: ", u)
+	return u, nil
 }
