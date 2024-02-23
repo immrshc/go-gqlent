@@ -25,6 +25,9 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("cars", Car.Type),
+		edge.To("pets", Pet.Type),
+		edge.To("card", Card.Type).
+			Unique(),
 		// Create an inverse-edge called "groups" of type `Group`
 		// and reference it to the "users" edge (in Group schema)
 		// explicitly using the `Ref` method.

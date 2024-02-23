@@ -13,7 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/immrshc/go-gqlent/ent/car"
+	"github.com/immrshc/go-gqlent/ent/card"
 	"github.com/immrshc/go-gqlent/ent/group"
+	"github.com/immrshc/go-gqlent/ent/pet"
 	"github.com/immrshc/go-gqlent/ent/user"
 )
 
@@ -76,7 +78,9 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			car.Table:   car.ValidColumn,
+			card.Table:  card.ValidColumn,
 			group.Table: group.ValidColumn,
+			pet.Table:   pet.ValidColumn,
 			user.Table:  user.ValidColumn,
 		})
 	})

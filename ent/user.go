@@ -8,6 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/immrshc/go-gqlent/ent/card"
 	"github.com/immrshc/go-gqlent/ent/user"
 )
 
@@ -30,11 +31,15 @@ type User struct {
 type UserEdges struct {
 	// Cars holds the value of the cars edge.
 	Cars []*Car `json:"cars,omitempty"`
+	// Pets holds the value of the pets edge.
+	Pets []*Pet `json:"pets,omitempty"`
+	// Card holds the value of the card edge.
+	Card *Card `json:"card,omitempty"`
 	// Groups holds the value of the groups edge.
 	Groups []*Group `json:"groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
 // CarsOrErr returns the Cars value or an error if the edge
@@ -46,10 +51,32 @@ func (e UserEdges) CarsOrErr() ([]*Car, error) {
 	return nil, &NotLoadedError{edge: "cars"}
 }
 
+// PetsOrErr returns the Pets value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PetsOrErr() ([]*Pet, error) {
+	if e.loadedTypes[1] {
+		return e.Pets, nil
+	}
+	return nil, &NotLoadedError{edge: "pets"}
+}
+
+// CardOrErr returns the Card value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) CardOrErr() (*Card, error) {
+	if e.loadedTypes[2] {
+		if e.Card == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: card.Label}
+		}
+		return e.Card, nil
+	}
+	return nil, &NotLoadedError{edge: "card"}
+}
+
 // GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GroupsOrErr() ([]*Group, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[3] {
 		return e.Groups, nil
 	}
 	return nil, &NotLoadedError{edge: "groups"}
@@ -113,6 +140,16 @@ func (u *User) Value(name string) (ent.Value, error) {
 // QueryCars queries the "cars" edge of the User entity.
 func (u *User) QueryCars() *CarQuery {
 	return NewUserClient(u.config).QueryCars(u)
+}
+
+// QueryPets queries the "pets" edge of the User entity.
+func (u *User) QueryPets() *PetQuery {
+	return NewUserClient(u.config).QueryPets(u)
+}
+
+// QueryCard queries the "card" edge of the User entity.
+func (u *User) QueryCard() *CardQuery {
+	return NewUserClient(u.config).QueryCard(u)
 }
 
 // QueryGroups queries the "groups" edge of the User entity.

@@ -29,6 +29,27 @@ var (
 			},
 		},
 	}
+	// CardsColumns holds the columns for the "cards" table.
+	CardsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "number", Type: field.TypeString},
+		{Name: "expired", Type: field.TypeTime},
+		{Name: "user_card", Type: field.TypeInt, Unique: true},
+	}
+	// CardsTable holds the schema information for the "cards" table.
+	CardsTable = &schema.Table{
+		Name:       "cards",
+		Columns:    CardsColumns,
+		PrimaryKey: []*schema.Column{CardsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "cards_users_card",
+				Columns:    []*schema.Column{CardsColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -39,6 +60,32 @@ var (
 		Name:       "groups",
 		Columns:    GroupsColumns,
 		PrimaryKey: []*schema.Column{GroupsColumns[0]},
+	}
+	// PetsColumns holds the columns for the "pets" table.
+	PetsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "car_pets", Type: field.TypeInt, Nullable: true},
+		{Name: "user_pets", Type: field.TypeInt, Nullable: true},
+	}
+	// PetsTable holds the schema information for the "pets" table.
+	PetsTable = &schema.Table{
+		Name:       "pets",
+		Columns:    PetsColumns,
+		PrimaryKey: []*schema.Column{PetsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "pets_cars_pets",
+				Columns:    []*schema.Column{PetsColumns[1]},
+				RefColumns: []*schema.Column{CarsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "pets_users_pets",
+				Columns:    []*schema.Column{PetsColumns[2]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -80,7 +127,9 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CarsTable,
+		CardsTable,
 		GroupsTable,
+		PetsTable,
 		UsersTable,
 		GroupUsersTable,
 	}
@@ -88,6 +137,9 @@ var (
 
 func init() {
 	CarsTable.ForeignKeys[0].RefTable = UsersTable
+	CardsTable.ForeignKeys[0].RefTable = UsersTable
+	PetsTable.ForeignKeys[0].RefTable = CarsTable
+	PetsTable.ForeignKeys[1].RefTable = UsersTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

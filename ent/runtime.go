@@ -3,6 +3,9 @@
 package ent
 
 import (
+	"time"
+
+	"github.com/immrshc/go-gqlent/ent/card"
 	"github.com/immrshc/go-gqlent/ent/group"
 	"github.com/immrshc/go-gqlent/ent/schema"
 	"github.com/immrshc/go-gqlent/ent/user"
@@ -12,6 +15,12 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	cardFields := schema.Card{}.Fields()
+	_ = cardFields
+	// cardDescExpired is the schema descriptor for expired field.
+	cardDescExpired := cardFields[1].Descriptor()
+	// card.DefaultExpired holds the default value on creation for the expired field.
+	card.DefaultExpired = cardDescExpired.Default.(time.Time)
 	groupFields := schema.Group{}.Fields()
 	_ = groupFields
 	// groupDescName is the schema descriptor for name field.

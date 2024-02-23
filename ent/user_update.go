@@ -11,7 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/immrshc/go-gqlent/ent/car"
+	"github.com/immrshc/go-gqlent/ent/card"
 	"github.com/immrshc/go-gqlent/ent/group"
+	"github.com/immrshc/go-gqlent/ent/pet"
 	"github.com/immrshc/go-gqlent/ent/predicate"
 	"github.com/immrshc/go-gqlent/ent/user"
 )
@@ -79,6 +81,40 @@ func (uu *UserUpdate) AddCars(c ...*Car) *UserUpdate {
 	return uu.AddCarIDs(ids...)
 }
 
+// AddPetIDs adds the "pets" edge to the Pet entity by IDs.
+func (uu *UserUpdate) AddPetIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddPetIDs(ids...)
+	return uu
+}
+
+// AddPets adds the "pets" edges to the Pet entity.
+func (uu *UserUpdate) AddPets(p ...*Pet) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.AddPetIDs(ids...)
+}
+
+// SetCardID sets the "card" edge to the Card entity by ID.
+func (uu *UserUpdate) SetCardID(id int) *UserUpdate {
+	uu.mutation.SetCardID(id)
+	return uu
+}
+
+// SetNillableCardID sets the "card" edge to the Card entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableCardID(id *int) *UserUpdate {
+	if id != nil {
+		uu = uu.SetCardID(*id)
+	}
+	return uu
+}
+
+// SetCard sets the "card" edge to the Card entity.
+func (uu *UserUpdate) SetCard(c *Card) *UserUpdate {
+	return uu.SetCardID(c.ID)
+}
+
 // AddGroupIDs adds the "groups" edge to the Group entity by IDs.
 func (uu *UserUpdate) AddGroupIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddGroupIDs(ids...)
@@ -118,6 +154,33 @@ func (uu *UserUpdate) RemoveCars(c ...*Car) *UserUpdate {
 		ids[i] = c[i].ID
 	}
 	return uu.RemoveCarIDs(ids...)
+}
+
+// ClearPets clears all "pets" edges to the Pet entity.
+func (uu *UserUpdate) ClearPets() *UserUpdate {
+	uu.mutation.ClearPets()
+	return uu
+}
+
+// RemovePetIDs removes the "pets" edge to Pet entities by IDs.
+func (uu *UserUpdate) RemovePetIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemovePetIDs(ids...)
+	return uu
+}
+
+// RemovePets removes "pets" edges to Pet entities.
+func (uu *UserUpdate) RemovePets(p ...*Pet) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.RemovePetIDs(ids...)
+}
+
+// ClearCard clears the "card" edge to the Card entity.
+func (uu *UserUpdate) ClearCard() *UserUpdate {
+	uu.mutation.ClearCard()
+	return uu
 }
 
 // ClearGroups clears all "groups" edges to the Group entity.
@@ -244,6 +307,80 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.PetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PetsTable,
+			Columns: []string{user.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedPetsIDs(); len(nodes) > 0 && !uu.mutation.PetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PetsTable,
+			Columns: []string{user.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.PetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PetsTable,
+			Columns: []string{user.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.CardCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.CardTable,
+			Columns: []string{user.CardColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(card.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.CardIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.CardTable,
+			Columns: []string{user.CardColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(card.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if uu.mutation.GroupsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -359,6 +496,40 @@ func (uuo *UserUpdateOne) AddCars(c ...*Car) *UserUpdateOne {
 	return uuo.AddCarIDs(ids...)
 }
 
+// AddPetIDs adds the "pets" edge to the Pet entity by IDs.
+func (uuo *UserUpdateOne) AddPetIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddPetIDs(ids...)
+	return uuo
+}
+
+// AddPets adds the "pets" edges to the Pet entity.
+func (uuo *UserUpdateOne) AddPets(p ...*Pet) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.AddPetIDs(ids...)
+}
+
+// SetCardID sets the "card" edge to the Card entity by ID.
+func (uuo *UserUpdateOne) SetCardID(id int) *UserUpdateOne {
+	uuo.mutation.SetCardID(id)
+	return uuo
+}
+
+// SetNillableCardID sets the "card" edge to the Card entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableCardID(id *int) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetCardID(*id)
+	}
+	return uuo
+}
+
+// SetCard sets the "card" edge to the Card entity.
+func (uuo *UserUpdateOne) SetCard(c *Card) *UserUpdateOne {
+	return uuo.SetCardID(c.ID)
+}
+
 // AddGroupIDs adds the "groups" edge to the Group entity by IDs.
 func (uuo *UserUpdateOne) AddGroupIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.AddGroupIDs(ids...)
@@ -398,6 +569,33 @@ func (uuo *UserUpdateOne) RemoveCars(c ...*Car) *UserUpdateOne {
 		ids[i] = c[i].ID
 	}
 	return uuo.RemoveCarIDs(ids...)
+}
+
+// ClearPets clears all "pets" edges to the Pet entity.
+func (uuo *UserUpdateOne) ClearPets() *UserUpdateOne {
+	uuo.mutation.ClearPets()
+	return uuo
+}
+
+// RemovePetIDs removes the "pets" edge to Pet entities by IDs.
+func (uuo *UserUpdateOne) RemovePetIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemovePetIDs(ids...)
+	return uuo
+}
+
+// RemovePets removes "pets" edges to Pet entities.
+func (uuo *UserUpdateOne) RemovePets(p ...*Pet) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.RemovePetIDs(ids...)
+}
+
+// ClearCard clears the "card" edge to the Card entity.
+func (uuo *UserUpdateOne) ClearCard() *UserUpdateOne {
+	uuo.mutation.ClearCard()
+	return uuo
 }
 
 // ClearGroups clears all "groups" edges to the Group entity.
@@ -547,6 +745,80 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(car.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.PetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PetsTable,
+			Columns: []string{user.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedPetsIDs(); len(nodes) > 0 && !uuo.mutation.PetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PetsTable,
+			Columns: []string{user.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.PetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PetsTable,
+			Columns: []string{user.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.CardCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.CardTable,
+			Columns: []string{user.CardColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(card.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.CardIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.CardTable,
+			Columns: []string{user.CardColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(card.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

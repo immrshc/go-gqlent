@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/immrshc/go-gqlent/ent/car"
+	"github.com/immrshc/go-gqlent/ent/pet"
 	"github.com/immrshc/go-gqlent/ent/predicate"
 	"github.com/immrshc/go-gqlent/ent/user"
 )
@@ -76,6 +77,21 @@ func (cu *CarUpdate) SetOwner(u *User) *CarUpdate {
 	return cu.SetOwnerID(u.ID)
 }
 
+// AddPetIDs adds the "pets" edge to the Pet entity by IDs.
+func (cu *CarUpdate) AddPetIDs(ids ...int) *CarUpdate {
+	cu.mutation.AddPetIDs(ids...)
+	return cu
+}
+
+// AddPets adds the "pets" edges to the Pet entity.
+func (cu *CarUpdate) AddPets(p ...*Pet) *CarUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cu.AddPetIDs(ids...)
+}
+
 // Mutation returns the CarMutation object of the builder.
 func (cu *CarUpdate) Mutation() *CarMutation {
 	return cu.mutation
@@ -85,6 +101,27 @@ func (cu *CarUpdate) Mutation() *CarMutation {
 func (cu *CarUpdate) ClearOwner() *CarUpdate {
 	cu.mutation.ClearOwner()
 	return cu
+}
+
+// ClearPets clears all "pets" edges to the Pet entity.
+func (cu *CarUpdate) ClearPets() *CarUpdate {
+	cu.mutation.ClearPets()
+	return cu
+}
+
+// RemovePetIDs removes the "pets" edge to Pet entities by IDs.
+func (cu *CarUpdate) RemovePetIDs(ids ...int) *CarUpdate {
+	cu.mutation.RemovePetIDs(ids...)
+	return cu
+}
+
+// RemovePets removes "pets" edges to Pet entities.
+func (cu *CarUpdate) RemovePets(p ...*Pet) *CarUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cu.RemovePetIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -151,6 +188,51 @@ func (cu *CarUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cu.mutation.PetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   car.PetsTable,
+			Columns: []string{car.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.RemovedPetsIDs(); len(nodes) > 0 && !cu.mutation.PetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   car.PetsTable,
+			Columns: []string{car.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cu.mutation.PetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   car.PetsTable,
+			Columns: []string{car.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -225,6 +307,21 @@ func (cuo *CarUpdateOne) SetOwner(u *User) *CarUpdateOne {
 	return cuo.SetOwnerID(u.ID)
 }
 
+// AddPetIDs adds the "pets" edge to the Pet entity by IDs.
+func (cuo *CarUpdateOne) AddPetIDs(ids ...int) *CarUpdateOne {
+	cuo.mutation.AddPetIDs(ids...)
+	return cuo
+}
+
+// AddPets adds the "pets" edges to the Pet entity.
+func (cuo *CarUpdateOne) AddPets(p ...*Pet) *CarUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cuo.AddPetIDs(ids...)
+}
+
 // Mutation returns the CarMutation object of the builder.
 func (cuo *CarUpdateOne) Mutation() *CarMutation {
 	return cuo.mutation
@@ -234,6 +331,27 @@ func (cuo *CarUpdateOne) Mutation() *CarMutation {
 func (cuo *CarUpdateOne) ClearOwner() *CarUpdateOne {
 	cuo.mutation.ClearOwner()
 	return cuo
+}
+
+// ClearPets clears all "pets" edges to the Pet entity.
+func (cuo *CarUpdateOne) ClearPets() *CarUpdateOne {
+	cuo.mutation.ClearPets()
+	return cuo
+}
+
+// RemovePetIDs removes the "pets" edge to Pet entities by IDs.
+func (cuo *CarUpdateOne) RemovePetIDs(ids ...int) *CarUpdateOne {
+	cuo.mutation.RemovePetIDs(ids...)
+	return cuo
+}
+
+// RemovePets removes "pets" edges to Pet entities.
+func (cuo *CarUpdateOne) RemovePets(p ...*Pet) *CarUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cuo.RemovePetIDs(ids...)
 }
 
 // Where appends a list predicates to the CarUpdate builder.
@@ -330,6 +448,51 @@ func (cuo *CarUpdateOne) sqlSave(ctx context.Context) (_node *Car, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if cuo.mutation.PetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   car.PetsTable,
+			Columns: []string{car.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.RemovedPetsIDs(); len(nodes) > 0 && !cuo.mutation.PetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   car.PetsTable,
+			Columns: []string{car.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := cuo.mutation.PetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   car.PetsTable,
+			Columns: []string{car.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

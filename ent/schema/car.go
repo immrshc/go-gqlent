@@ -30,5 +30,6 @@ func (Car) Edges() []ent.Edge {
 			// setting the edge to unique, ensure
 			// that a car can have only one owner.
 			Unique(),
+		edge.To("pets", Pet.Type),
 	}
 }

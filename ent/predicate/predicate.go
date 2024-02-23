@@ -9,8 +9,14 @@ import (
 // Car is the predicate function for car builders.
 type Car func(*sql.Selector)
 
+// Card is the predicate function for card builders.
+type Card func(*sql.Selector)
+
 // Group is the predicate function for group builders.
 type Group func(*sql.Selector)
+
+// Pet is the predicate function for pet builders.
+type Pet func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

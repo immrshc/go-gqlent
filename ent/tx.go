@@ -14,8 +14,12 @@ type Tx struct {
 	config
 	// Car is the client for interacting with the Car builders.
 	Car *CarClient
+	// Card is the client for interacting with the Card builders.
+	Card *CardClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// Pet is the client for interacting with the Pet builders.
+	Pet *PetClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -150,7 +154,9 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Car = NewCarClient(tx.config)
+	tx.Card = NewCardClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
+	tx.Pet = NewPetClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 

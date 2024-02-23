@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/immrshc/go-gqlent/ent/car"
+	"github.com/immrshc/go-gqlent/ent/pet"
 	"github.com/immrshc/go-gqlent/ent/user"
 )
 
@@ -50,6 +51,21 @@ func (cc *CarCreate) SetNillableOwnerID(id *int) *CarCreate {
 // SetOwner sets the "owner" edge to the User entity.
 func (cc *CarCreate) SetOwner(u *User) *CarCreate {
 	return cc.SetOwnerID(u.ID)
+}
+
+// AddPetIDs adds the "pets" edge to the Pet entity by IDs.
+func (cc *CarCreate) AddPetIDs(ids ...int) *CarCreate {
+	cc.mutation.AddPetIDs(ids...)
+	return cc
+}
+
+// AddPets adds the "pets" edges to the Pet entity.
+func (cc *CarCreate) AddPets(p ...*Pet) *CarCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return cc.AddPetIDs(ids...)
 }
 
 // Mutation returns the CarMutation object of the builder.
@@ -141,6 +157,22 @@ func (cc *CarCreate) createSpec() (*Car, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_cars = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := cc.mutation.PetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   car.PetsTable,
+			Columns: []string{car.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

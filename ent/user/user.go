@@ -18,6 +18,10 @@ const (
 	FieldName = "name"
 	// EdgeCars holds the string denoting the cars edge name in mutations.
 	EdgeCars = "cars"
+	// EdgePets holds the string denoting the pets edge name in mutations.
+	EdgePets = "pets"
+	// EdgeCard holds the string denoting the card edge name in mutations.
+	EdgeCard = "card"
 	// EdgeGroups holds the string denoting the groups edge name in mutations.
 	EdgeGroups = "groups"
 	// Table holds the table name of the user in the database.
@@ -29,6 +33,20 @@ const (
 	CarsInverseTable = "cars"
 	// CarsColumn is the table column denoting the cars relation/edge.
 	CarsColumn = "user_cars"
+	// PetsTable is the table that holds the pets relation/edge.
+	PetsTable = "pets"
+	// PetsInverseTable is the table name for the Pet entity.
+	// It exists in this package in order to avoid circular dependency with the "pet" package.
+	PetsInverseTable = "pets"
+	// PetsColumn is the table column denoting the pets relation/edge.
+	PetsColumn = "user_pets"
+	// CardTable is the table that holds the card relation/edge.
+	CardTable = "cards"
+	// CardInverseTable is the table name for the Card entity.
+	// It exists in this package in order to avoid circular dependency with the "card" package.
+	CardInverseTable = "cards"
+	// CardColumn is the table column denoting the card relation/edge.
+	CardColumn = "user_card"
 	// GroupsTable is the table that holds the groups relation/edge. The primary key declared below.
 	GroupsTable = "group_users"
 	// GroupsInverseTable is the table name for the Group entity.
@@ -98,6 +116,27 @@ func ByCars(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByPetsCount orders the results by pets count.
+func ByPetsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPetsStep(), opts...)
+	}
+}
+
+// ByPets orders the results by pets terms.
+func ByPets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPetsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCardField orders the results by card field.
+func ByCardField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCardStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByGroupsCount orders the results by groups count.
 func ByGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -116,6 +155,20 @@ func newCarsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CarsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CarsTable, CarsColumn),
+	)
+}
+func newPetsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PetsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PetsTable, PetsColumn),
+	)
+}
+func newCardStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CardInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, false, CardTable, CardColumn),
 	)
 }
 func newGroupsStep() *sqlgraph.Step {

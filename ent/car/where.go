@@ -193,6 +193,29 @@ func HasOwnerWith(preds ...predicate.User) predicate.Car {
 	})
 }
 
+// HasPets applies the HasEdge predicate on the "pets" edge.
+func HasPets() predicate.Car {
+	return predicate.Car(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PetsTable, PetsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPetsWith applies the HasEdge predicate on the "pets" edge with a given conditions (other predicates).
+func HasPetsWith(preds ...predicate.Pet) predicate.Car {
+	return predicate.Car(func(s *sql.Selector) {
+		step := newPetsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Car) predicate.Car {
 	return predicate.Car(sql.AndPredicates(predicates...))

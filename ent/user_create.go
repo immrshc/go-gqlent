@@ -10,7 +10,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/immrshc/go-gqlent/ent/car"
+	"github.com/immrshc/go-gqlent/ent/card"
 	"github.com/immrshc/go-gqlent/ent/group"
+	"github.com/immrshc/go-gqlent/ent/pet"
 	"github.com/immrshc/go-gqlent/ent/user"
 )
 
@@ -54,6 +56,40 @@ func (uc *UserCreate) AddCars(c ...*Car) *UserCreate {
 		ids[i] = c[i].ID
 	}
 	return uc.AddCarIDs(ids...)
+}
+
+// AddPetIDs adds the "pets" edge to the Pet entity by IDs.
+func (uc *UserCreate) AddPetIDs(ids ...int) *UserCreate {
+	uc.mutation.AddPetIDs(ids...)
+	return uc
+}
+
+// AddPets adds the "pets" edges to the Pet entity.
+func (uc *UserCreate) AddPets(p ...*Pet) *UserCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uc.AddPetIDs(ids...)
+}
+
+// SetCardID sets the "card" edge to the Card entity by ID.
+func (uc *UserCreate) SetCardID(id int) *UserCreate {
+	uc.mutation.SetCardID(id)
+	return uc
+}
+
+// SetNillableCardID sets the "card" edge to the Card entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableCardID(id *int) *UserCreate {
+	if id != nil {
+		uc = uc.SetCardID(*id)
+	}
+	return uc
+}
+
+// SetCard sets the "card" edge to the Card entity.
+func (uc *UserCreate) SetCard(c *Card) *UserCreate {
+	return uc.SetCardID(c.ID)
 }
 
 // AddGroupIDs adds the "groups" edge to the Group entity by IDs.
@@ -168,6 +204,38 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(car.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.PetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PetsTable,
+			Columns: []string{user.PetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.CardIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   user.CardTable,
+			Columns: []string{user.CardColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(card.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
