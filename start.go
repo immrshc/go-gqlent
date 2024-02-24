@@ -3,17 +3,21 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/immrshc/go-gqlent/ent/car"
+	"entgo.io/ent/privacy"
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/immrshc/go-gqlent/ent"
+	"github.com/immrshc/go-gqlent/ent/car"
+	_ "github.com/immrshc/go-gqlent/ent/runtime"
 	"github.com/immrshc/go-gqlent/ent/user"
+	"github.com/immrshc/go-gqlent/privacy/viewer"
 )
 
 // Open new connection
@@ -36,7 +40,7 @@ func main() {
 	if err := client.Schema.Create(ctx); err != nil {
 		log.Fatal(err)
 	}
-	if err := CreateUserCards(ctx, client); err != nil {
+	if err := CreateUsersAfterPolicyValidation(ctx, client); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -243,5 +247,30 @@ func CreateUserCards(ctx context.Context, client *ent.Client) error {
 		return fmt.Errorf("querying owner: %w", err)
 	}
 	log.Println("owner:", owner)
+	return nil
+}
+
+func CreateUsersAfterPolicyValidation(ctx context.Context, client *ent.Client) error {
+	// Expect operation to fail, because viewer-context
+	// is missing (first mutation rule check).
+	if err := client.User.Create().Exec(ctx); !errors.Is(err, privacy.Deny) {
+		return fmt.Errorf("expect operation to fail, but got %w", err)
+	}
+	// Apply the same operation with "Admin" role.
+	admin := viewer.NewContext(ctx, viewer.UserViewer{Role: viewer.Admin})
+	if err := client.User.Create().Exec(admin); err != nil {
+		return fmt.Errorf("expect operation to pass, but got %w", err)
+	}
+	// Apply the same operation with "ViewOnly" role.
+	viewOnly := viewer.NewContext(ctx, viewer.UserViewer{Role: viewer.View})
+	if err := client.User.Create().Exec(viewOnly); !errors.Is(err, privacy.Deny) {
+		return fmt.Errorf("expect operation to fail, but got %w", err)
+	}
+	// Allow all viewers to query users.
+	for _, ctx := range []context.Context{ctx, viewOnly, admin} {
+		// Operation should pass for all viewers.
+		count := client.User.Query().CountX(ctx)
+		fmt.Println(count)
+	}
 	return nil
 }
