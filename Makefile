@@ -15,3 +15,6 @@ atlas-status:
 	atlas migrate apply \
 		--config "file://atlas.hcl" \
 		--env dev
+
+gql-generate:
+	go run github.com/99designs/gqlgen generate
