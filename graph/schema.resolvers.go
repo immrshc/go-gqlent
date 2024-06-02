@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/graph-gophers/dataloader"
 	"github.com/immrshc/go-gqlgent/graph/model"
 )
 
@@ -32,7 +33,12 @@ func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 
 // User is the resolver for the user field.
 func (r *todoResolver) User(ctx context.Context, obj *model.Todo) (*model.User, error) {
-	return &model.User{ID: obj.UserID, Name: "user " + obj.UserID}, nil
+	thunk := r.UserLoader.Load(ctx, dataloader.StringKey(obj.UserID))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	return result.(*model.User), nil
 }
 
 // Mutation returns MutationResolver implementation.
@@ -42,8 +48,16 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 // Todo returns TodoResolver implementation.
-func (r *Resolver) Todo() TodoResolver { return &todoResolver{r} }
+func (r *Resolver) Todo() TodoResolver {
+	return &todoResolver{
+		Loaders:  NewLoaders(),
+		Resolver: r,
+	}
+}
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-type todoResolver struct{ *Resolver }
+type todoResolver struct {
+	*Loaders
+	*Resolver
+}
